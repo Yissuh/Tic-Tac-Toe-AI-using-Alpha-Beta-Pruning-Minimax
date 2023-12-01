@@ -1,4 +1,5 @@
 import sys
+import random
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QMessageBox, QComboBox, QLabel
 
 class TicTacToe(QWidget):
@@ -40,14 +41,28 @@ class TicTacToe(QWidget):
         self.turn_label = QLabel(f"Current Turn: {self.current_player}", self)
         layout.addWidget(self.turn_label, 4, 0, 1, 3)
 
+        # Start Game button
+        self.start_game_button = QPushButton("Computer First Turn", self)
+        self.start_game_button.clicked.connect(self.computer_first_turn)
+        layout.addWidget(self.start_game_button, 5, 0, 1, 3)
+
+        # Reset Game button
+        self.reset_button = QPushButton("Reset Game", self)
+        self.reset_button.clicked.connect(self.reset_game)
+        layout.addWidget(self.reset_button, 6, 0, 1, 3)
+
         self.show()
 
     def select_game_mode(self):
-        self.reset_game()
         self.game_mode = self.game_mode_combo.currentText()
+        self.reset_game()
 
-        if self.game_mode == "Against Computer" and self.current_player == "Player 2":
+    def computer_first_turn(self):
+        if self.game_mode == "Against Computer" and self.current_player == "Player 1":
+            self.current_player = "Player 2"  # Update the current player
+            self.turn_label.setText(f"Current Turn: {self.current_player}")  # Update the UI
             self.computer_move()
+
 
     def check_winner(self):
         for i in range(3):
@@ -91,12 +106,20 @@ class TicTacToe(QWidget):
                     self.computer_move()
 
     def reset_game(self):
-        self.current_player = "Player 1"
         self.game_board = [["" for _ in range(3)] for _ in range(3)]
         for i in range(3):
             for j in range(3):
                 self.buttons[i][j].setText("")
+
+        if self.game_mode == "Against Computer":
+            # Player starts first in 'Against Computer' mode
+            self.current_player = "Player 1"
+        else:
+            # Randomize the start between players in other modes
+            self.current_player = random.choice(["Player 1", "Player 2"])
+
         self.turn_label.setText(f"Current Turn: {self.current_player}")
+
 
     def minimax(self, depth, alpha, beta, maximizing_player):
         winner = self.check_winner()
@@ -141,10 +164,18 @@ class TicTacToe(QWidget):
             return min_eval, best_move
 
     def computer_move(self):
-        _, best_move = self.minimax(0, float('-inf'), float('inf'), True)
-        if best_move:
-            row, col = best_move
-            self.on_click(row, col)
+        if all(all(cell == "" for cell in row) for row in self.game_board):
+            # If the board is empty, choose a random corner or center position
+            corners_and_center = [(0, 0), (0, 2), (2, 0), (2, 2), (1, 1)]
+            row, col = random.choice(corners_and_center)
+        else:
+            _, best_move = self.minimax(0, float('-inf'), float('inf'), True)
+            if best_move:
+                row, col = best_move
+            else:
+                return  # No valid moves
+
+        self.on_click(row, col)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
