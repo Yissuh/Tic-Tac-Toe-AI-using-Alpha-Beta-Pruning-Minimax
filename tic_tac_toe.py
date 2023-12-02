@@ -5,11 +5,11 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QMe
 class TicTacToe(QWidget):
     def __init__(self):
         super().__init__()
-
+    
         self.current_player = "Player 1"
         self.game_board = [["" for _ in range(3)] for _ in range(3)]
         self.game_mode = "Against Computer"
-
+        self.highlighted_button = None
         self.init_ui()
 
     def init_ui(self):
@@ -29,6 +29,7 @@ class TicTacToe(QWidget):
             self.buttons.append(row)
 
         self.setLayout(layout)
+
 
         # Adding a ComboBox for selecting game mode
         self.game_mode_combo = QComboBox(self)
@@ -51,7 +52,22 @@ class TicTacToe(QWidget):
         self.reset_button.clicked.connect(self.reset_game)
         layout.addWidget(self.reset_button, 6, 0, 1, 3)
 
+        self.best_move_button = QPushButton("Best Move", self)
+        self.best_move_button.clicked.connect(self.highlight_best_move)
+        layout.addWidget(self.best_move_button, 7, 0, 1, 3)  
+
         self.show()
+
+    def highlight_best_move(self):
+            if self.game_mode == "Against Computer" and self.current_player == "Player 1":
+                _, best_move = self.minimax(0, float('-inf'), float('inf'), False)  # Calculate best move for 'X'
+                if best_move:
+                    row, col = best_move
+                    button = self.buttons[row][col]
+                    if self.highlighted_button:  # Clear previously highlighted button
+                        self.highlighted_button.setStyleSheet("font-size: 30px;")
+                    button.setStyleSheet("background-color: yellow; font-size: 30px;")
+                    self.highlighted_button = button  # Update the highlighted button
 
     def select_game_mode(self):
         self.game_mode = self.game_mode_combo.currentText()
@@ -105,11 +121,17 @@ class TicTacToe(QWidget):
                 if self.game_mode == "Against Computer" and self.current_player == "Player 2":
                     self.computer_move()
 
+                if self.highlighted_button:  # Clear highlighted button on a new move
+                    self.highlighted_button.setStyleSheet("font-size: 30px;")
+                    self.highlighted_button = None  # Reset highlighted button
+
     def reset_game(self):
         self.game_board = [["" for _ in range(3)] for _ in range(3)]
         for i in range(3):
             for j in range(3):
+                buttons = self.buttons[i][j]
                 self.buttons[i][j].setText("")
+                buttons.setStyleSheet("font-size: 30px;")
 
         if self.game_mode == "Against Computer":
             # Player starts first in 'Against Computer' mode
@@ -129,7 +151,8 @@ class TicTacToe(QWidget):
             return 10 - depth, None
         elif winner == None and all(all(cell != "" for cell in row) for row in self.game_board):
             return 0, None
-
+        
+    
         if maximizing_player:
             max_eval = float('-inf')
             best_move = None
@@ -142,7 +165,8 @@ class TicTacToe(QWidget):
                         if eval > max_eval:
                             max_eval = eval
                             best_move = (i, j)
-                        alpha = max(alpha, eval)
+                        elif eval == max_eval:
+                         alpha = max(alpha, eval)
                         if beta <= alpha:
                             break  # Beta cut-off
             return max_eval, best_move
@@ -174,6 +198,10 @@ class TicTacToe(QWidget):
                 row, col = best_move
             else:
                 return  # No valid moves
+
+        if self.highlighted_button:
+            self.highlighted_button.setStyleSheet("font-size: 30px;")
+            self.highlighted_button = None
 
         self.on_click(row, col)
 
