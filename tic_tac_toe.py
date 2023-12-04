@@ -56,6 +56,7 @@ class TicTacToe(QWidget):
         self.best_move_button.clicked.connect(self.highlight_best_move)
         layout.addWidget(self.best_move_button, 7, 0, 1, 3)  
 
+        
         self.show()
 
     def highlight_best_move(self):
