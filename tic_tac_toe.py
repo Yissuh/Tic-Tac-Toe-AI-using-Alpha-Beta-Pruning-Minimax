@@ -73,11 +73,16 @@ class TicTacToe(QWidget):
         self.game_mode = self.game_mode_combo.currentText()
         self.reset_game()
 
+        if self.game_mode == "Two Players":
+            self.start_game_button.setEnabled(False)
+
     def computer_first_turn(self):
         if self.game_mode == "Against Computer" and self.current_player == "Player 1":
             self.current_player = "Player 2"  # Update the current player
             self.turn_label.setText(f"Current Turn: {self.current_player}")  # Update the UI
             self.computer_move()
+
+        self.start_game_button.setEnabled(False)
 
 
     def check_winner(self):
@@ -119,6 +124,7 @@ class TicTacToe(QWidget):
                 self.current_player = "Player 2" if self.current_player == "Player 1" else "Player 1"
                 self.turn_label.setText(f"Current Turn: {self.current_player}")
                 if self.game_mode == "Against Computer" and self.current_player == "Player 2":
+                    self.start_game_button.setEnabled(False)
                     self.computer_move()
 
                 if self.highlighted_button:  # Clear highlighted button on a new move
@@ -134,9 +140,11 @@ class TicTacToe(QWidget):
                 buttons.setStyleSheet("font-size: 30px;")
 
         if self.game_mode == "Against Computer":
+            self.start_game_button.setEnabled(True)
             # Player starts first in 'Against Computer' mode
             self.current_player = "Player 1"
         else:
+            self.start_game_button.setEnabled(False)
             # Randomize the start between players in other modes
             self.current_player = random.choice(["Player 1", "Player 2"])
 
