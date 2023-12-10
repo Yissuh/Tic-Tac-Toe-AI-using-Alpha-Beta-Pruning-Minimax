@@ -10,6 +10,13 @@ class TicTacToe(QWidget):
         self.game_board = [["" for _ in range(3)] for _ in range(3)]
         self.game_mode = "Against Computer"
         self.highlighted_button = None
+
+
+        # Initialize scoreboard variables
+        self.player_1_wins = 0
+        self.player_2_wins = 0
+        self.draws = 0
+
         self.init_ui()
 
     def init_ui(self):
@@ -59,6 +66,11 @@ class TicTacToe(QWidget):
         self.setFixedSize(self.sizeHint())
         self.show()
 
+        # Scoreboard labels
+        self.scoreboard_label = QLabel(self)
+        layout.addWidget(self.scoreboard_label, 8, 0, 1, 3)
+        self.update_scoreboard_label()
+
     def highlight_best_move(self):
             if self.game_mode == "Against Computer" and self.current_player == "Player 1":
                 _, best_move = self.minimax(0, float('-inf'), float('inf'), False)  # Calculate best move for 'X'
@@ -71,11 +83,20 @@ class TicTacToe(QWidget):
                     self.highlighted_button = button  # Update the highlighted button
 
     def select_game_mode(self):
+        previous_game_mode = self.game_mode
         self.game_mode = self.game_mode_combo.currentText()
-        self.reset_game()
+        if previous_game_mode != self.game_mode:
+            self.reset_scoreboard()
+            self.reset_game()
 
         if self.game_mode == "Two Players":
             self.start_game_button.setEnabled(False)
+
+    def reset_scoreboard(self):
+        self.player_1_wins = 0
+        self.player_2_wins = 0
+        self.draws = 0
+        self.update_scoreboard_label()
 
     def computer_first_turn(self):
         if self.game_mode == "Against Computer" and self.current_player == "Player 1":
@@ -97,6 +118,15 @@ class TicTacToe(QWidget):
         if self.game_board[0][2] == self.game_board[1][1] == self.game_board[2][0] != "":
             return self.game_board[0][2]
         return None
+    
+    def update_scoreboard_label(self):
+        # Update the scoreboard text
+        scoreboard_text = ""
+        if self.game_mode == "Against Computer":
+            scoreboard_text = f"Player Wins: {self.player_1_wins} | Computer Wins: {self.player_2_wins} | Draws: {self.draws}"
+        else:
+            scoreboard_text = f"X Player Wins: {self.player_1_wins} | O Player Wins: {self.player_2_wins} | Draws: {self.draws}"
+        self.scoreboard_label.setText(scoreboard_text)
 
     def on_click(self, row, col):
         if self.game_board[row][col] == "" and not self.check_winner():
@@ -114,12 +144,21 @@ class TicTacToe(QWidget):
             if winner:
                 if winner == "O" and self.game_mode == "Against Computer":
                     winner_message = "Computer Wins"
+                    self.player_2_wins += 1
                 else:
-                    winner_message = "Player 1 Wins" if winner == "X" else "Player 2 Wins"
+                    if winner == "X":
+                        winner_message = "Player 1 Wins"
+                        self.player_1_wins += 1
+                    else:
+                        winner_message = "Player 2 Wins"
+                        self.player_2_wins += 1
+                self.update_scoreboard_label()
                 QMessageBox.information(self, "Tic Tac Toe", f"{winner_message}!")
                 self.reset_game()
             elif all(all(cell != "" for cell in row) for row in self.game_board):
                 QMessageBox.information(self, "Tic Tac Toe", "It's a tie!")
+                self.draws += 1
+                self.update_scoreboard_label()
                 self.reset_game()
             else:
                 self.current_player = "Player 2" if self.current_player == "Player 1" else "Player 1"
